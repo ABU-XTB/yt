@@ -29,11 +29,11 @@ def download_video(url, quality='best'):
             'nocheckcertificate': True,
             'ignoreerrors': False,
             'no_color': True,
-            'extract_flat': True,  # Added to avoid API calls
-            'force_generic_extractor': True,  # Added to use generic extractor
-            'cookiefile': None,  # Added to avoid cookie issues
-            'http_headers': {  # Added custom headers
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            'http_headers': {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                'Accept-Language': 'en-us,en;q=0.5',
+                'Sec-Fetch-Mode': 'navigate'
             }
         }
 
