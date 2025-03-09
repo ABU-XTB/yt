@@ -6,22 +6,11 @@ import shutil
 
 app = Flask(__name__)
 
-def download_video(url):
+def download_video(url, quality='best'):  # Add quality parameter
     downloads_dir = os.path.join(os.path.dirname(__file__), 'downloads')
     os.makedirs(downloads_dir, exist_ok=True)
     
     try:
-        def progress_hook(d):
-            if d['status'] == 'downloading':
-                progress = {
-                    'downloaded': d.get('downloaded_bytes', 0),
-                    'total': d.get('total_bytes', 0),
-                    'speed': d.get('speed', 0),
-                    'eta': d.get('eta', 0)
-                }
-                print(progress)
-
-        quality = request.form.get('quality', 'best')
         format_spec = {
             'highest': 'best',
             '1080p': 'bestvideo[height<=1080]+bestaudio/best[height<=1080]',
@@ -35,7 +24,6 @@ def download_video(url):
             'format': format_spec.get(quality, 'best'),
             'quiet': False,
             'no_warnings': False,
-            'progress_hooks': [progress_hook],
             'outtmpl': os.path.join(downloads_dir, '%(title)s.%(ext)s')
         }
 
@@ -45,8 +33,7 @@ def download_video(url):
                     'key': 'FFmpegExtractAudio',
                     'preferredcodec': 'mp3',
                     'preferredquality': '192',
-                }],
-                'outtmpl': os.path.join(downloads_dir, '%(title)s.%(ext)s')
+                }]
             })
         
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -62,47 +49,29 @@ def download_video(url):
 @app.route('/', methods=['GET', 'POST'])
 def home():
     if request.method == 'POST':
-        if request.is_json:
-            # Handle JSON request (for progress updates)
-            data = request.get_json()
-            video_url = data.get('url')
-            quality = data.get('quality')
-            if video_url:
-                result = download_video(video_url)
-                if result['success']:
+        video_url = request.form.get('url') or request.json.get('url')
+        quality = request.form.get('quality') or request.json.get('quality', 'best')
+        
+        if video_url:
+            result = download_video(video_url, quality)
+            if result['success']:
+                try:
+                    filename = os.path.basename(result['file_path'])
+                    return send_file(
+                        result['file_path'],
+                        as_attachment=True,
+                        download_name=filename,
+                        mimetype='application/octet-stream'
+                    )
+                except Exception as e:
+                    return jsonify({'error': str(e)}), 500
+                finally:
                     try:
-                        filename = os.path.basename(result['file_path'])
-                        return send_file(
-                            result['file_path'],
-                            as_attachment=True,
-                            download_name=filename,
-                            mimetype='application/octet-stream'
-                        )
-                    finally:
-                        try:
-                            shutil.rmtree(os.path.dirname(result['file_path']))
-                        except:
-                            pass
-                return jsonify({'error': result.get('error', 'Download failed')})
-        else:
-            # Handle form submission
-            video_url = request.form.get('url')
-            if video_url:
-                result = download_video(video_url)
-                if result['success']:
-                    try:
-                        filename = os.path.basename(result['file_path'])
-                        return send_file(
-                            result['file_path'],
-                            as_attachment=True,
-                            download_name=filename,
-                            mimetype='application/octet-stream'
-                        )
-                    finally:
-                        try:
-                            shutil.rmtree(os.path.dirname(result['file_path']))
-                        except:
-                            pass
+                        if os.path.exists(result['file_path']):
+                            os.remove(result['file_path'])
+                    except:
+                        pass
+            return jsonify({'error': result.get('error', 'Download failed')}), 400
     
     return render_template('index.html')
 
