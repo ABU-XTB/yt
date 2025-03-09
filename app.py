@@ -12,7 +12,7 @@ def download_video(url, quality='best'):
     
     try:
         format_spec = {
-            'highest': 'bestvideo+bestaudio/best',  # Changed to ensure best quality
+            'highest': 'bestvideo+bestaudio/best',
             '1080p': 'bestvideo[height<=1080]+bestaudio/best[height<=1080]',
             '720p': 'bestvideo[height<=720]+bestaudio/best[height<=720]',
             '480p': 'bestvideo[height<=480]+bestaudio/best[height<=480]',
@@ -24,11 +24,17 @@ def download_video(url, quality='best'):
             'format': format_spec.get(quality, 'bestvideo+bestaudio/best'),
             'quiet': False,
             'no_warnings': False,
-            'merge_output_format': 'mp4',  # Added to ensure proper merging
+            'merge_output_format': 'mp4',
             'outtmpl': os.path.join(downloads_dir, '%(title)s.%(ext)s'),
-            'nocheckcertificate': True,    # Added to avoid SSL issues
-            'ignoreerrors': False,         # Don't ignore errors
-            'no_color': True              # Disable colors in output
+            'nocheckcertificate': True,
+            'ignoreerrors': False,
+            'no_color': True,
+            'extract_flat': True,  # Added to avoid API calls
+            'force_generic_extractor': True,  # Added to use generic extractor
+            'cookiefile': None,  # Added to avoid cookie issues
+            'http_headers': {  # Added custom headers
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            }
         }
 
         if quality == 'audio':
