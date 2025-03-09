@@ -6,13 +6,13 @@ import shutil
 
 app = Flask(__name__)
 
-def download_video(url, quality='best'):  # Add quality parameter
+def download_video(url, quality='best'):
     downloads_dir = os.path.join(os.path.dirname(__file__), 'downloads')
     os.makedirs(downloads_dir, exist_ok=True)
     
     try:
         format_spec = {
-            'highest': 'best',
+            'highest': 'bestvideo+bestaudio/best',  # Changed to ensure best quality
             '1080p': 'bestvideo[height<=1080]+bestaudio/best[height<=1080]',
             '720p': 'bestvideo[height<=720]+bestaudio/best[height<=720]',
             '480p': 'bestvideo[height<=480]+bestaudio/best[height<=480]',
@@ -21,14 +21,19 @@ def download_video(url, quality='best'):  # Add quality parameter
         }
 
         ydl_opts = {
-            'format': format_spec.get(quality, 'best'),
+            'format': format_spec.get(quality, 'bestvideo+bestaudio/best'),
             'quiet': False,
             'no_warnings': False,
-            'outtmpl': os.path.join(downloads_dir, '%(title)s.%(ext)s')
+            'merge_output_format': 'mp4',  # Added to ensure proper merging
+            'outtmpl': os.path.join(downloads_dir, '%(title)s.%(ext)s'),
+            'nocheckcertificate': True,    # Added to avoid SSL issues
+            'ignoreerrors': False,         # Don't ignore errors
+            'no_color': True              # Disable colors in output
         }
 
         if quality == 'audio':
             ydl_opts.update({
+                'format': 'bestaudio/best',
                 'postprocessors': [{
                     'key': 'FFmpegExtractAudio',
                     'preferredcodec': 'mp3',
@@ -41,7 +46,14 @@ def download_video(url, quality='best'):  # Add quality parameter
             file_path = ydl.prepare_filename(info)
             if quality == 'audio':
                 file_path = os.path.splitext(file_path)[0] + '.mp3'
-            return {'success': True, 'title': info['title'], 'file_path': file_path}
+            elif 'mp4' not in file_path:
+                file_path = os.path.splitext(file_path)[0] + '.mp4'
+            
+            # Wait for file to be fully written
+            if os.path.exists(file_path):
+                return {'success': True, 'title': info['title'], 'file_path': file_path}
+            else:
+                raise Exception("File download failed")
             
     except Exception as e:
         return {'success': False, 'error': str(e)}
@@ -57,12 +69,14 @@ def home():
             if result['success']:
                 try:
                     filename = os.path.basename(result['file_path'])
-                    return send_file(
+                    response = send_file(
                         result['file_path'],
                         as_attachment=True,
                         download_name=filename,
                         mimetype='application/octet-stream'
                     )
+                    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+                    return response
                 except Exception as e:
                     return jsonify({'error': str(e)}), 500
                 finally:
