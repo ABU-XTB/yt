@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://www.youtube.com; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';">
+        <meta name="description" content="Download YouTube videos easily">
+    <!-- Add these favicon links -->
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <title>YouTube Video Downloader</title>
+    <style>
+        :root {
+            --bg-color: #f0f0f0;
+            --container-bg: white;
+            --text-color: black;
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #1a1a1a;
+            --container-bg: #2d2d2d;
+            --text-color: #ffffff;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: all 0.3s ease;
+        }
+
+        .container {
+            background-color: var(--container-bg);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .error-message {
+            background-color: #ffebee;
+            color: #c62828;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            display: none;
+        }
+
+        [data-theme="dark"] .error-message {
+            background-color: #421c1c;
+            color: #ff8a80;
+        }
+
+        h1 {
+            color: #ff0000;
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }/* Update search container and input styles */
+        .search-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 15px 45px 15px 20px;
+            font-size: 16px;
+            border: 2px solid #ff0000;
+            border-radius: 25px;
+            background-color: var(--container-bg);
+            color: var(--text-color);
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #cc0000;
+            box-shadow: 0 2px 8px rgba(255,0,0,0.2);
+        }
+
+        .search-icon {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #ff0000;
+            font-size: 20px;
+            pointer-events: none;
+        }
+
+        [data-theme="dark"] input[type="text"] {
+            background-color: var(--container-bg);
+            border-color: #ff0000;
+        }
+        /* Add these styles to your existing CSS */
+        /* Update loader styles */
+                .loader {
+                    display: none;
+                    width: 48px;
+                    height: 48px;
+                    border: 5px solid #FFF;
+                    border-bottom-color: #FF0000;
+                    border-radius: 50%;
+                    margin: 20px auto 5px;
+                    animation: rotation 1s linear infinite;
+                }
+        .loader-text {
+            display: none;
+            text-align: center;
+            color: var(--text-color);
+            font-weight: bold;
+            margin-bottom: 20px;
+            font-size: 14px;
+            letter-spacing: 2px;
+        }
+        @keyframes rotation {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        [data-theme="dark"] .loader {
+            border-color: #444;
+            border-bottom-color: #FF0000;
+        }/* Add these styles to your existing CSS section */
+                .preview-container {
+                    display: none;  /* Hide the entire container by default */
+                }
+                /* Add this to your existing styles */
+                        .logo-container {
+                            text-align: center;
+                            margin-bottom: 20px;
+                        }
+                        
+                        .site-logo {
+                            max-width: 200px;
+                            height: auto;
+                            margin: 0 auto;
+                        }
+                .video-preview {
+                    width: 100%;
+                    height: 450px;
+                    border: none;
+                    border-radius: 8px;
+                }
+        .quality-selector {
+            margin: 15px 0;
+        }
+
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ff0000;
+            border-radius: 4px;
+            background-color: var(--container-bg);
+            color: var(--text-color);
+            cursor: pointer;
+        }
+        button {
+            background-color: #ff0000;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            font-weight: bold;
+            font-size: 18px;
+            text-transform: uppercase;
+        }
+        button:hover {
+            background-color: #cc0000;
+        }
+        select:focus {
+            outline: none;
+            border-color: #ff0000;
+        }
+        /* Remove or update this to keep red border in dark mode */
+        [data-theme="dark"] select {
+            border-color: #ff0000;
+        }
+        .video-preview {
+            width: 100%;
+            height: 450px;
+            border: none;
+            border-radius: 8px;
+        }
+        .theme-switch-wrapper {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+        }
+
+        .theme-switch {
+            display: inline-block;
+            height: 28px;
+            width: 50px;
+            position: relative;
+        }
+        .theme-switch input {
+            display: none;
+        }
+        .slider {
+            background-color: #ccc;
+            bottom: 0;
+            cursor: pointer;
+            left: 0;
+            position: absolute;
+            right: 0;
+            top: 0;
+            transition: .4s;
+            border-radius: 34px;
+            display: flex;
+            align-items: center;
+            padding: 0 5px;
+        }
+        .slider:before {
+            background-color: #fff;
+            bottom: 3px;
+            content: "☀️";
+            height: 22px;
+            left: 3px;
+            position: absolute;
+            transition: .4s;
+            width: 22px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+        input:checked + .slider {
+            background-color: #66bb6a;
+        }
+        input:checked + .slider:before {
+            transform: translateX(22px);
+            content: "🌙";
+        }
+    </style>
+</head>
+<body>
+    <div class="theme-switch-wrapper">
+        <label class="theme-switch" for="checkbox">
+            <input type="checkbox" id="checkbox" />
+            <div class="slider"></div>
+        </label>
+    </div>
+    <div class="container">
+        <!-- Remove logo container -->
+        <h1>YouTube Video Downloader</h1>
+        <form method="POST">
+            <div class="form-group">
+                <div class="search-container">
+                    <input type="text" name="url" id="videoUrl" placeholder="Enter YouTube URL" required 
+                           oninput="showPreview(this.value)">
+                    <span class="search-icon">🔍</span>
+                </div>
+            </div>
+        </form>
+
+        <div id="errorMessage" class="error-message"></div>
+        <div id="loader" class="loader"></div>
+        <div id="loaderText" class="loader-text">JUST WAIT...</div>
+            
+        <div class="preview-container" id="previewContainer">
+            <iframe id="videoPreview" class="video-preview" allowfullscreen></iframe>
+            <div class="quality-selector">
+                <select name="quality" id="videoQuality" form="downloadForm">
+                    <option value="" disabled selected>Select Quality</option>
+                    <option value="highest">Highest Quality</option>
+                    <option value="1080p">1080p</option>
+                    <option value="720p">720p</option>
+                    <option value="480p">480p</option>
+                    <option value="360p">360p</option>
+                    <option value="audio">Audio Only (MP3)</option>
+                </select>
+            </div>
+            <button type="submit" form="downloadForm">Download</button>
+        </div>
+
+        <form id="downloadForm" method="POST">
+            <input type="hidden" name="url" id="downloadUrl">
+            <input type="hidden" name="quality" id="selectedQuality">
+        </form>
+    </div>
+
+    <script>
+        // Update the URL in the hidden form when preview is shown
+        function showPreview(url) {
+            const container = document.getElementById('previewContainer');
+            const preview = document.getElementById('videoPreview');
+            const errorDiv = document.getElementById('errorMessage');
+            const downloadUrl = document.getElementById('downloadUrl');
+            const loader = document.getElementById('loader');
+            const loaderText = document.getElementById('loaderText');
+            
+            if (!url) {
+                container.style.display = 'none';
+                preview.src = '';
+                loader.style.display = 'none';
+                loaderText.style.display = 'none';
+                return;
+            }
+
+            // Show loader and hide preview
+            loader.style.display = 'block';
+            loaderText.style.display = 'block';
+            container.style.display = 'none';
+            
+            setTimeout(() => {
+                try {
+                    let videoId = '';
+                    const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+                    const match = url.match(regex);
+                    
+                    if (match && match[1]) {
+                        videoId = match[1];
+                        const embedUrl = `https://www.youtube.com/embed/${videoId}`;
+                        preview.src = embedUrl;
+                        container.style.display = 'block';
+                        errorDiv.style.display = 'none';
+                    } else {
+                        throw new Error('Invalid YouTube URL. Please enter a valid YouTube video URL.');
+                    }
+                } catch (error) {
+                    container.style.display = 'none';
+                    preview.src = '';
+                    showError(error.message);
+                }
+                // Hide loader after preview is loaded
+                loader.style.display = 'none';
+                loaderText.style.display = 'none';
+                // Update hidden form URL
+                downloadUrl.value = url;
+            }, 5000);
+        }
+    </script>
+    <script>
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            setTimeout(() => {
+                errorDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        document.querySelector('form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const url = document.getElementById('videoUrl').value;
+            
+            try {
+                const response = await fetch('/', {
+                    method: 'POST',
+                    body: new FormData(this)
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to download video. Please try again.');
+                }
+
+                // Clear input after successful download
+                setTimeout(() => {
+                    document.getElementById('videoUrl').value = '';
+                }, 1000);
+
+            } catch (error) {
+                showError(error.message);
+            }
+        });
+    </script>
+    <script>
+        // Theme switcher functionality
+        const toggleSwitch = document.querySelector('#checkbox');
+        const currentTheme = localStorage.getItem('theme');
+    
+        if (currentTheme) {
+            document.documentElement.setAttribute('data-theme', currentTheme);
+            if (currentTheme === 'dark') {
+                toggleSwitch.checked = true;
+            }
+        }
+    
+        function switchTheme(e) {
+            if (e.target.checked) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+                localStorage.setItem('theme', 'light');
+            }    
+        }
+    
+        toggleSwitch.addEventListener('change', switchTheme);
+    </script>
+</body>
+</html>
+<!-- Add this after the download button -->
+        <div class="progress-container" style="display: none;">
+            <div class="progress-bar">
+                <div class="progress" id="downloadProgress"></div>
+            </div>
+            <div class="progress-text" id="progressText">0%</div>
+        </div>
+
+        <style>
+            .progress-container {
+                margin-top: 20px;
+            }
+            .progress-bar {
+                width: 100%;
+                height: 20px;
+                background-color: #f0f0f0;
+                border-radius: 10px;
+                overflow: hidden;
+            }
+            .progress {
+                width: 0%;
+                height: 100%;
+                background-color: #ff0000;
+                transition: width 0.3s ease;
+            }
+            .progress-text {
+                text-align: center;
+                margin-top: 5px;
+                color: var(--text-color);
+            }
+        </style>
+
+        <script>
+            document.getElementById('downloadForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const progressContainer = document.querySelector('.progress-container');
+                const progressBar = document.getElementById('downloadProgress');
+                const progressText = document.getElementById('progressText');
+                const videoUrl = document.getElementById('videoUrl').value;
+                const quality = document.getElementById('videoQuality').value;
+                
+                progressContainer.style.display = 'block';
+                progressBar.style.width = '0%';
+                progressText.textContent = '0%';
+
+                let progress = 0;
+                const interval = setInterval(() => {
+                    progress += 0.5;
+                    if (progress <= 95) {
+                        progressBar.style.width = progress + '%';
+                        progressText.textContent = Math.floor(progress) + '%';
+                    }
+                }, 200);
+
+                // Send URL and quality preference to server
+                fetch('/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        url: videoUrl,
+                        quality: quality
+                    })
+                })
+                .then(response => {
+                    if (!response.ok) throw new Error('Download failed');
+                    clearInterval(interval);
+                    progressBar.style.width = '100%';
+                    progressText.textContent = '100%';
+                    return response.blob();
+                })
+                .then(blob => {
+                    // Create download link
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `youtube_video.${quality === 'audio' ? 'mp3' : 'mp4'}`;
+                    document.body.appendChild(a);
+                    a.click();
+                    
+                    // Cleanup
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                    setTimeout(() => {
+                        progressContainer.style.display = 'none';
+                        document.getElementById('videoUrl').value = '';
+                    }, 1000);
+                })
+                .catch(error => {
+                    clearInterval(interval);
+                    progressContainer.style.display = 'none';
+                    showError('Download failed. Please try again or check your connection.');
+                    console.error('Download error:', error);
+                });
+            });
+        </script>
