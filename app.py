@@ -1,5 +1,6 @@
+# -*- coding: utf-8 -*-
 from flask import Flask, render_template, request, send_file, jsonify
-from markupsafe import Markup
+from markupsafe import Markup  # Add this import
 from flask_recaptcha import ReCaptcha
 from dotenv import load_dotenv
 import yt_dlp
@@ -14,7 +15,7 @@ app = Flask(__name__)
 # Configure ReCaptcha using environment variables
 app.config['RECAPTCHA_SITE_KEY'] = os.getenv('RECAPTCHA_SITE_KEY')
 app.config['RECAPTCHA_SECRET_KEY'] = os.getenv('RECAPTCHA_SECRET_KEY')
-app.config['RECAPTCHA_ENABLED'] = True
+app.config['RECAPTCHA_ENABLED'] = True  # Add this line
 recaptcha = ReCaptcha(app)
 
 @app.route('/', methods=['GET', 'POST'])
