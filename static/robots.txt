@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+Disallow: /download/
+Sitemap: https://https://easy-youtube-video-downloader.onrender.com//sitemap.xml
