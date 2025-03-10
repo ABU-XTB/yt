@@ -58,17 +58,18 @@ def download_video(url, quality='best'):
                 raise e
 
         info = download_with_fallback()
-        file_path = ydl.prepare_filename(info)
-            if quality == 'audio':
-                file_path = os.path.splitext(file_path)[0] + '.mp3'
-            elif 'mp4' not in file_path:
-                file_path = os.path.splitext(file_path)[0] + '.mp4'
-            
-            # Wait for file to be fully written
-            if os.path.exists(file_path):
-                return {'success': True, 'title': info['title'], 'file_path': file_path}
-            else:
-                raise Exception("File download failed")
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            file_path = ydl.prepare_filename(info)
+        if quality == 'audio':
+            file_path = os.path.splitext(file_path)[0] + '.mp3'
+        elif 'mp4' not in file_path:
+            file_path = os.path.splitext(file_path)[0] + '.mp4'
+        
+        # Wait for file to be fully written
+        if os.path.exists(file_path):
+            return {'success': True, 'title': info['title'], 'file_path': file_path}
+        else:
+            raise Exception("File download failed")
             
     except Exception as e:
         return {'success': False, 'error': str(e)}
