@@ -264,6 +264,11 @@
                            oninput="showPreview(this.value)">
                     <span class="search-icon">🔍</span>
                 </div>
+                <!-- Add reCAPTCHA here -->
+                <!-- In your form, before the submit button -->
+                <div class="form-group">
+                    {{ recaptcha }}
+                </div>
             </div>
         </form>
 
@@ -404,7 +409,11 @@
     </script>
 </body>
 </html>
-<!-- Add this after the download button -->
+<head>
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    <!-- Update CSP to allow reCAPTCHA -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://www.youtube.com https://www.google.com https://www.gstatic.com; script-src 'self' 'unsafe-inline' https://www.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline';">
+</head>
         <div class="progress-container" style="display: none;">
             <div class="progress-bar">
                 <div class="progress" id="downloadProgress"></div>
