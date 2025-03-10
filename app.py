@@ -29,19 +29,45 @@ def download_video(url, quality='best'):
             'nocheckcertificate': True,
             'ignoreerrors': False,
             'no_color': True,
-            'geo_bypass': True,  # Add geo restriction bypass
-            'geo_bypass_country': 'US',  # Use US as default region
-            'socket_timeout': 30,  # Increase timeout
-            'retries': 10,  # Add retry attempts
+            'geo_bypass': True,
+            'geo_bypass_country': 'US',
+            'socket_timeout': 30,
+            'retries': 10,
             'http_headers': {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-                'Accept-Language': 'en-US,en;q=0.5',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+                'Accept-Language': 'en-US,en;q=0.9',
+                'Accept-Encoding': 'gzip, deflate, br',
                 'Sec-Fetch-Mode': 'navigate',
+                'Sec-Fetch-Site': 'same-origin',
+                'Sec-Fetch-User': '?1',
+                'Sec-Fetch-Dest': 'document',
+                'Sec-Ch-Ua': '"Google Chrome";v="119", "Chromium";v="119", "Not?A_Brand";v="24"',
+                'Sec-Ch-Ua-Mobile': '?0',
+                'Sec-Ch-Ua-Platform': '"Windows"',
+                'Upgrade-Insecure-Requests': '1',
+                'Connection': 'keep-alive',
+                'Cache-Control': 'max-age=0',
                 'Referer': 'https://www.youtube.com/',
                 'Origin': 'https://www.youtube.com'
+            },
+            'extractor_args': {
+                'youtube': {
+                    'player_client': ['android'],
+                    'player_skip': ['webpage', 'config'],
+                }
             }
         }
+
+        if quality == 'audio':
+            ydl_opts.update({
+                'format': 'bestaudio/best',
+                'postprocessors': [{
+                    'key': 'FFmpegExtractAudio',
+                    'preferredcodec': 'mp3',
+                    'preferredquality': '192',
+                }]
+            })
 
         # Try alternative format if initial download fails
         def download_with_fallback():
