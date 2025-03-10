@@ -29,27 +29,36 @@ def download_video(url, quality='best'):
             'nocheckcertificate': True,
             'ignoreerrors': False,
             'no_color': True,
+            'geo_bypass': True,  # Add geo restriction bypass
+            'geo_bypass_country': 'US',  # Use US as default region
+            'socket_timeout': 30,  # Increase timeout
+            'retries': 10,  # Add retry attempts
             'http_headers': {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                'Accept-Language': 'en-us,en;q=0.5',
-                'Sec-Fetch-Mode': 'navigate'
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                'Accept-Language': 'en-US,en;q=0.5',
+                'Sec-Fetch-Mode': 'navigate',
+                'Referer': 'https://www.youtube.com/',
+                'Origin': 'https://www.youtube.com'
             }
         }
 
-        if quality == 'audio':
-            ydl_opts.update({
-                'format': 'bestaudio/best',
-                'postprocessors': [{
-                    'key': 'FFmpegExtractAudio',
-                    'preferredcodec': 'mp3',
-                    'preferredquality': '192',
-                }]
-            })
-        
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(url, download=True)
-            file_path = ydl.prepare_filename(info)
+        # Try alternative format if initial download fails
+        def download_with_fallback():
+            try:
+                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                    info = ydl.extract_info(url, download=True)
+                    return info
+            except Exception as e:
+                if 'This video is not available' in str(e):
+                    # Try with basic format
+                    ydl_opts['format'] = 'best'
+                    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                        return ydl.extract_info(url, download=True)
+                raise e
+
+        info = download_with_fallback()
+        file_path = ydl.prepare_filename(info)
             if quality == 'audio':
                 file_path = os.path.splitext(file_path)[0] + '.mp3'
             elif 'mp4' not in file_path:
