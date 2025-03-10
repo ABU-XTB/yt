@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, send_file, jsonify
-from markupsafe import Markup  # Changed import
+from markupsafe import Markup
 from flask_recaptcha import ReCaptcha
 from dotenv import load_dotenv
 import yt_dlp
@@ -7,19 +7,20 @@ import os
 import tempfile
 import shutil
 
-load_dotenv()  # Load environment variables
+load_dotenv()
 
 app = Flask(__name__)
 
 # Configure ReCaptcha using environment variables
 app.config['RECAPTCHA_SITE_KEY'] = os.getenv('RECAPTCHA_SITE_KEY')
 app.config['RECAPTCHA_SECRET_KEY'] = os.getenv('RECAPTCHA_SECRET_KEY')
+app.config['RECAPTCHA_ENABLED'] = True
 recaptcha = ReCaptcha(app)
 
 @app.route('/', methods=['GET', 'POST'])
 def home():
     if request.method == 'POST':
-        if recaptcha.verify():  # Verify CAPTCHA
+        if recaptcha.verify():
             video_url = request.form.get('url') or request.json.get('url')
             quality = request.form.get('quality') or request.json.get('quality', 'best')
             
@@ -48,7 +49,7 @@ def home():
         else:
             return jsonify({'error': 'Please complete the CAPTCHA verification'}), 400
     
-    return render_template('index.html')
+    return render_template('index.html', recaptcha=recaptcha)
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
