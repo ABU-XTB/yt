@@ -13,9 +13,7 @@ def download_video(url, quality='best'):
     os.makedirs(downloads_dir, exist_ok=True)
     
     try:
-        # Create a cloudscraper session
-        scraper = cloudscraper.create_scraper()
-        
+        # Remove cloudscraper since we don't need browser cookies
         format_spec = {
             'highest': 'best',
             '1080p': 'bestvideo[height<=1080]+bestaudio/best',
@@ -24,13 +22,6 @@ def download_video(url, quality='best'):
             '360p': 'bestvideo[height<=360]+bestaudio/best',
             'audio': 'bestaudio/best'
         }
-
-        # List of common user agents
-        user_agents = [
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/119.0',
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Edge/119.0.0.0',
-        ]
 
         ydl_opts = {
             'format': format_spec.get(quality, 'best'),
@@ -44,45 +35,23 @@ def download_video(url, quality='best'):
             'noprogress': True,
             'noplaylist': True,
             'extract_flat': False,
-            'youtube_include_dash_manifest': True,
+            'force_generic_extractor': True,
             'http_headers': {
-                'User-Agent': random.choice(user_agents),
-                'Accept': '*/*',
-                'Accept-Language': 'en-US,en;q=0.5',
-                'Accept-Encoding': 'gzip, deflate',
-                'Range': 'bytes=0-',
-                'Referer': 'https://www.youtube.com/',
-                'Origin': 'https://www.youtube.com',
-                'Connection': 'keep-alive',
-            },
-            'extractor_args': {
-                'youtube': {
-                    'player_client': ['web', 'android'],
-                    'player_skip': ['js'],
-                }
-            },
-            'socket_timeout': 15,
-            'retries': 3,
-            'source_address': '0.0.0.0',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                'Accept-Language': 'en-us,en;q=0.5',
+            }
         }
 
         def download_with_fallback():
             try:
-                # First try: Use cloudscraper to get cookies
-                cookies = scraper.get('https://www.youtube.com').cookies
-                ydl_opts['cookiesfrombrowser'] = ('chrome', None, None, None)
-                ydl_opts['cookiefile'] = None
-                
                 with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                    info = ydl.extract_info(url, download=True)
-                    if info:
-                        return info
-                    
-                # Second try: Basic format with different user agent
+                    return ydl.extract_info(url, download=True)
+            except Exception as e:
+                # Try with basic format
                 basic_opts = ydl_opts.copy()
                 basic_opts.update({
-                    'format': 'best[protocol^=http]',
-                    'http_headers': {'User-Agent': random.choice(user_agents)},
+                    'format': 'best[protocol^=http]/best',
                 })
                 with yt_dlp.YoutubeDL(basic_opts) as ydl:
                     return ydl.extract_info(url, download=True)
