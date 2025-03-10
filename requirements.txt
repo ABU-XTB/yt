@@ -1,7 +1,4 @@
-flask
-yt-dlp
-flask-recaptcha
-python-dotenv
-ffmpeg-python
-gunicorn
-markupsafe
+Flask==2.3.3
+pytube==15.0.0
+Flask-ReCaptcha==0.4.2
+markupsafe==2.1.3
