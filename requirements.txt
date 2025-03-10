@@ -1,4 +1,6 @@
 flask
 yt-dlp
+flask-recaptcha
+python-dotenv
 ffmpeg-python
 gunicorn
