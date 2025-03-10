@@ -12,52 +12,54 @@ def download_video(url, quality='best'):
     
     try:
         format_spec = {
-            'highest': 'bestvideo+bestaudio/best',
-            '1080p': 'bestvideo[height<=1080]+bestaudio/best[height<=1080]',
-            '720p': 'bestvideo[height<=720]+bestaudio/best[height<=720]',
-            '480p': 'bestvideo[height<=480]+bestaudio/best[height<=480]',
-            '360p': 'bestvideo[height<=360]+bestaudio/best[height<=360]',
+            'highest': 'best',  # Simplified format
+            '1080p': 'bestvideo[height<=1080]+bestaudio/best',
+            '720p': 'bestvideo[height<=720]+bestaudio/best',
+            '480p': 'bestvideo[height<=480]+bestaudio/best',
+            '360p': 'bestvideo[height<=360]+bestaudio/best',
             'audio': 'bestaudio/best'
         }
 
         ydl_opts = {
-            'format': format_spec.get(quality, 'bestvideo+bestaudio/best'),
-            'quiet': False,
-            'no_warnings': False,
+            'format': format_spec.get(quality, 'best'),
+            'quiet': True,
+            'no_warnings': True,
             'merge_output_format': 'mp4',
             'outtmpl': os.path.join(downloads_dir, '%(title)s.%(ext)s'),
             'nocheckcertificate': True,
-            'ignoreerrors': False,
+            'ignoreerrors': True,
             'no_color': True,
-            'geo_bypass': True,
-            'geo_bypass_country': 'US',
-            'socket_timeout': 30,
-            'retries': 10,
+            'noprogress': True,
+            'noplaylist': True,
+            'extract_flat': False,
+            'youtube_include_dash_manifest': False,
             'http_headers': {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+                'Accept': '*/*',
                 'Accept-Language': 'en-US,en;q=0.9',
-                'Accept-Encoding': 'gzip, deflate, br',
-                'Sec-Fetch-Mode': 'navigate',
-                'Sec-Fetch-Site': 'same-origin',
-                'Sec-Fetch-User': '?1',
-                'Sec-Fetch-Dest': 'document',
-                'Sec-Ch-Ua': '"Google Chrome";v="119", "Chromium";v="119", "Not?A_Brand";v="24"',
-                'Sec-Ch-Ua-Mobile': '?0',
-                'Sec-Ch-Ua-Platform': '"Windows"',
-                'Upgrade-Insecure-Requests': '1',
-                'Connection': 'keep-alive',
-                'Cache-Control': 'max-age=0',
-                'Referer': 'https://www.youtube.com/',
                 'Origin': 'https://www.youtube.com'
-            },
-            'extractor_args': {
-                'youtube': {
-                    'player_client': ['android'],
-                    'player_skip': ['webpage', 'config'],
-                }
             }
         }
+
+        # Try downloading with different methods
+        def download_with_fallback():
+            try:
+                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                    # First try: Get info only
+                    info = ydl.extract_info(url, download=False)
+                    if info:
+                        # Then download if info is available
+                        return ydl.extract_info(url, download=True)
+                    raise Exception("Could not get video info")
+            except Exception as e:
+                # If first attempt fails, try with basic options
+                basic_opts = ydl_opts.copy()
+                basic_opts.update({
+                    'format': 'best',
+                    'youtube_include_dash_manifest': True,
+                })
+                with yt_dlp.YoutubeDL(basic_opts) as ydl:
+                    return ydl.extract_info(url, download=True)
 
         if quality == 'audio':
             ydl_opts.update({
