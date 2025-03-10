@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from flask import Flask, render_template, request, send_file, jsonify
-from markupsafe import Markup  # Add this import
+from markupsafe import Markup
 from flask_recaptcha import ReCaptcha
 from dotenv import load_dotenv
 import yt_dlp
