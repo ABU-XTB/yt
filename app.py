@@ -74,8 +74,10 @@ def download_video(url, quality='best'):
                 ydl_opts['cookiefile'] = None
                 
                 with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                    return ydl.extract_info(url, download=True)
-            except Exception as e:
+                    info = ydl.extract_info(url, download=True)
+                    if info:
+                        return info
+                    
                 # Second try: Basic format with different user agent
                 basic_opts = ydl_opts.copy()
                 basic_opts.update({
@@ -83,6 +85,11 @@ def download_video(url, quality='best'):
                     'http_headers': {'User-Agent': random.choice(user_agents)},
                 })
                 with yt_dlp.YoutubeDL(basic_opts) as ydl:
+                    return ydl.extract_info(url, download=True)
+            except Exception as e:
+                # Final try with basic format
+                ydl_opts['format'] = 'best'
+                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                     return ydl.extract_info(url, download=True)
 
         if quality == 'audio':
@@ -94,20 +101,6 @@ def download_video(url, quality='best'):
                     'preferredquality': '192',
                 }]
             })
-
-        # Try alternative format if initial download fails
-        def download_with_fallback():
-            try:
-                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                    info = ydl.extract_info(url, download=True)
-                    return info
-            except Exception as e:
-                if 'This video is not available' in str(e):
-                    # Try with basic format
-                    ydl_opts['format'] = 'best'
-                    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                        return ydl.extract_info(url, download=True)
-                raise e
 
         info = download_with_fallback()
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
