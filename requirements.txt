@@ -1,6 +1,4 @@
 flask
 yt-dlp
-cloudscraper
-requests
 ffmpeg-python
 gunicorn
