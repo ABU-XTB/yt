@@ -12,7 +12,7 @@ def download_video(url, quality='best'):
     
     try:
         format_spec = {
-            'highest': 'best',  # Simplified format
+            'highest': 'best',
             '1080p': 'bestvideo[height<=1080]+bestaudio/best',
             '720p': 'bestvideo[height<=720]+bestaudio/best',
             '480p': 'bestvideo[height<=480]+bestaudio/best',
@@ -35,31 +35,46 @@ def download_video(url, quality='best'):
             'youtube_include_dash_manifest': False,
             'http_headers': {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
-                'Accept': '*/*',
-                'Accept-Language': 'en-US,en;q=0.9',
-                'Origin': 'https://www.youtube.com'
-            }
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                'Accept-Language': 'en-US,en;q=0.5',
+                'Accept-Encoding': 'gzip, deflate',
+                'DNT': '1',
+                'Connection': 'keep-alive',
+            },
+            'extractor_args': {
+                'youtube': {
+                    'player_client': ['android', 'web'],
+                    'player_skip': ['webpage', 'config', 'js'],
+                }
+            },
+            'socket_timeout': 30,
+            'concurrent_fragment_downloads': 1,
+            'force_generic_extractor': False,
+            'overwrites': True
         }
 
-        # Try downloading with different methods
         def download_with_fallback():
             try:
                 with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                    # First try: Get info only
+                    # Try mobile endpoint first
+                    ydl_opts['extractor_args']['youtube']['player_client'] = ['android']
                     info = ydl.extract_info(url, download=False)
-                    if info:
-                        # Then download if info is available
-                        return ydl.extract_info(url, download=True)
-                    raise Exception("Could not get video info")
-            except Exception as e:
-                # If first attempt fails, try with basic options
-                basic_opts = ydl_opts.copy()
-                basic_opts.update({
-                    'format': 'best',
-                    'youtube_include_dash_manifest': True,
-                })
-                with yt_dlp.YoutubeDL(basic_opts) as ydl:
                     return ydl.extract_info(url, download=True)
+            except Exception as first_error:
+                try:
+                    # Try web endpoint if mobile fails
+                    ydl_opts['extractor_args']['youtube']['player_client'] = ['web']
+                    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                        return ydl.extract_info(url, download=True)
+                except Exception as second_error:
+                    # Final attempt with basic options
+                    basic_opts = ydl_opts.copy()
+                    basic_opts.update({
+                        'format': 'best',
+                        'force_generic_extractor': True
+                    })
+                    with yt_dlp.YoutubeDL(basic_opts) as ydl:
+                        return ydl.extract_info(url, download=True)
 
         if quality == 'audio':
             ydl_opts.update({
