@@ -5,17 +5,14 @@ from flask_recaptcha import ReCaptcha
 from dotenv import load_dotenv
 import yt_dlp
 import os
-import tempfile
-import shutil
 
-load_dotenv()
+load_dotenv()  # Load environment variables from .env file
 
 app = Flask(__name__)
 
-# Configure ReCaptcha using environment variables
+# Configure ReCaptcha
 app.config['RECAPTCHA_SITE_KEY'] = os.getenv('RECAPTCHA_SITE_KEY')
 app.config['RECAPTCHA_SECRET_KEY'] = os.getenv('RECAPTCHA_SECRET_KEY')
-app.config['RECAPTCHA_ENABLED'] = True  # Add this line
 recaptcha = ReCaptcha(app)
 
 @app.route('/', methods=['GET', 'POST'])
