@@ -3,7 +3,6 @@ import yt_dlp
 import os
 import tempfile
 import shutil
-import cloudscraper
 import random
 
 app = Flask(__name__)
@@ -13,7 +12,6 @@ def download_video(url, quality='best'):
     os.makedirs(downloads_dir, exist_ok=True)
     
     try:
-        # Remove cloudscraper since we don't need browser cookies
         format_spec = {
             'highest': 'best',
             '1080p': 'bestvideo[height<=1080]+bestaudio/best',
