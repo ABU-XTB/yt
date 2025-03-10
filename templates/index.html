@@ -264,8 +264,7 @@
                            oninput="showPreview(this.value)">
                     <span class="search-icon">🔍</span>
                 </div>
-                <!-- Update reCAPTCHA div -->
-                <div class="g-recaptcha" data-sitekey="{{ config.get('RECAPTCHA_SITE_KEY') }}"></div>
+                <div class="g-recaptcha" data-sitekey="{{ recaptcha.site_key }}"></div>
             </div>
         </form>
 
@@ -406,22 +405,6 @@
     </script>
 </body>
 </html>
-<head>
-    <style>
-        /* Add this to your existing styles */
-        .g-recaptcha {
-            margin: 20px 0;
-            display: flex;
-            justify-content: center;
-        }
-    </style>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://www.youtube.com https://www.google.com https://www.gstatic.com; script-src 'self' 'unsafe-inline' https://www.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline'; frame-src 'self' https://www.youtube.com https://www.google.com;">
-    <!-- Add reCAPTCHA script -->
-    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
-</head>
         <div class="progress-container" style="display: none;">
             <div class="progress-bar">
                 <div class="progress" id="downloadProgress"></div>
