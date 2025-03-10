@@ -1,4 +1,5 @@
-from flask import Flask, render_template, request, send_file, jsonify, Markup
+from flask import Flask, render_template, request, send_file, jsonify
+from markupsafe import Markup  # Changed import
 from flask_recaptcha import ReCaptcha
 from dotenv import load_dotenv
 import yt_dlp
